@@ -29,9 +29,6 @@ class CrossScorer(LearnableScorer, DistributableModel):
     AKA Cross-Encoder
     """
 
-    max_length: Param[int]
-    """Maximum length (in tokens) for the query-document string"""
-
     encoder: Param[TextEncoderBase[Tuple[str, str], torch.Tensor]]
     """an encoder for encoding the concatenated query-document tokens which
     doesn't contains the final linear layer"""
@@ -44,7 +41,6 @@ class CrossScorer(LearnableScorer, DistributableModel):
         super().__initialize__(options)
         self.encoder.initialize(options)
         self.classifier = torch.nn.Linear(self.encoder.dimension, 1)
-        self.tokenizer_options = TokenizerOptions(max_length=self.max_length)
 
     def forward(self, inputs: BaseRecords, info: TrainerContext = None):
         # Encode queries and documents
