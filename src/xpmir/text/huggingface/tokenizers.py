@@ -130,7 +130,7 @@ class HFTokenizerBase(TokenizerBase[TokenizerInput, TokenizedTexts]):
 
     @classmethod
     def from_pretrained_id(cls, hf_id: str, **kwargs):
-        return cls(tokenizer=HFTokenizer(model_id=hf_id), **kwargs)
+        return cls.C(tokenizer=HFTokenizer.C(model_id=hf_id), **kwargs)
 
     def vocabulary_size(self):
         return self.tokenizer.vocab_size

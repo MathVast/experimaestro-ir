@@ -25,7 +25,7 @@ class HFEncoderBase(Module):
         :param kwargs: keyword arguments passed to the model constructor
         :return: A hugging-fasce based encoder
         """
-        return cls(model=HFModel.from_pretrained_id(model_id), **kwargs)
+        return cls.C(model=HFModel.from_pretrained_id(model_id), **kwargs)
 
     def __initialize__(self, options):
         super().__initialize__(options)

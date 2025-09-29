@@ -92,9 +92,9 @@ def msmarco_v1_docpairs_efficient_sampler(
     """
     topics = prepare_dataset("irds.msmarco-passage.train.queries")
     train_triples = prepare_dataset("irds.msmarco-passage.train.docpairs")
-    triplets = ShuffledTrainingTripletsLines(
+    triplets = ShuffledTrainingTripletsLines.C(
         seed=seed,
-        data=StoreTrainingTripletTopicAdapter(data=train_triples, store=topics),
+        data=StoreTrainingTripletTopicAdapter.C(data=train_triples, store=topics),
         sample_rate=sample_rate,
         sample_max=sample_max,
         doc_ids=True,
@@ -102,12 +102,12 @@ def msmarco_v1_docpairs_efficient_sampler(
     ).submit(launcher=launcher)
 
     # Builds the sampler by hydrating documents
-    sampler = TripletBasedSampler(source=triplets)
-    hydrator = SampleHydrator(
+    sampler = TripletBasedSampler.C(source=triplets)
+    hydrator = SampleHydrator.C(
         documentstore=prepare_collection("irds.msmarco-passage.documents")
     )
 
-    return PairwiseTransformAdapter(sampler=sampler, adapter=hydrator)
+    return PairwiseTransformAdapter.C(sampler=sampler, adapter=hydrator)
 
 
 @cache
