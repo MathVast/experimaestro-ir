@@ -256,7 +256,7 @@ class TokenizedTextEncoder(
     ) -> EncoderOutput:
         assert len(args) == 0, "Unhandled extra arguments"
         options = options or TokenizerOptions()
-        options.max_length = min(self.encoder.max_length, options.max_length if options else sys.maxsize)
+        options.max_length = min(self.encoder.max_length, options.max_length if options.max_length else sys.maxsize)
         tokenized = self.tokenizer.tokenize(inputs, options)
         return self.forward_tokenized(tokenized, *args)
 
