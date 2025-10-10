@@ -42,7 +42,7 @@ class HFEncoderBase(Module):
     @property
     def max_length(self):
         """Returns the maximum length that the model can process"""
-        return sys.maxsize
+        return self.model.hf_config.max_position_embeddings
 
 
 class HFTokensEncoder(
