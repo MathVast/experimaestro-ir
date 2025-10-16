@@ -334,8 +334,10 @@ class FutureEvaluationResult:
     def task(self) -> Evaluate:
         return self.result.result
 
-    def evaluate(self, retriever: Retriever, *, launcher: Optional["Launcher"] = None):
-        self._result = self._evaluations.evaluate_retriever(self.key, retriever)
+    def evaluate(self, retriever: Retriever, **kwargs):
+        self._result = self._evaluations.evaluate_retriever(
+            self.key, retriever, **kwargs
+        )
 
     @property
     def dataset(self) -> "Adhoc":
