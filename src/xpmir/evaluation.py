@@ -6,7 +6,7 @@ from attrs import define
 from datamaestro_text.interfaces.trec import write_run_dict
 import pandas as pd
 from pathlib import Path
-from typing import DefaultDict, Dict, List, Protocol, Union, Tuple, Optional
+from typing import DefaultDict, Dict, List, Protocol, Union, Optional
 import ir_measures
 from experimaestro import Task, Param, pathgenerator, Annotated, tags, TagDict
 from datamaestro_text.data.ir import (
@@ -309,6 +309,44 @@ class EvaluationResult:
     """The task for this result"""
 
 
+class FutureEvaluationResult:
+    """An evaluation that needs to be run"""
+
+    key: str
+    """Dataset identifier"""
+
+    def __init__(self, key: str, evaluations: "Evaluations"):
+        self.key = key
+        self._evaluations = evaluations
+        self._result: Optional[EvaluationResult] = None
+
+    @property
+    def result(self) -> AdhocResults:
+        """Results"""
+        return self.result.result
+
+    @property
+    def run(self) -> Optional[AdhocRun]:
+        """The run (if available)"""
+        return self.result.run
+
+    @property
+    def task(self) -> Evaluate:
+        return self.result.result
+
+    def evaluate(self, retriever: Retriever, **kwargs):
+        self._result = self._evaluations.evaluate_retriever(
+            self.key, retriever, **kwargs
+        )
+
+    @property
+    def dataset(self) -> "Adhoc":
+        return self._evaluations.dataset
+
+
+AnyEvaluationResult = FutureEvaluationResult | EvaluationResult
+
+
 class EvaluationsCollection:
     """A collection of evaluation
 
@@ -318,7 +356,7 @@ class EvaluationsCollection:
 
     collection: Dict[str, Evaluations]
 
-    per_model: Dict[str, List[Tuple[str, AdhocResults]]]
+    per_model: Dict[str, List[AnyEvaluationResult]]
     """List of results per model"""
 
     def __init__(self, **collection: Evaluations):
@@ -329,7 +367,7 @@ class EvaluationsCollection:
         self,
         retriever: Union[Retriever, RetrieverFactory],
         launcher: Launcher = None,
-        model_id: str = None,
+        model_id: Optional[str] = None,
         overwrite: bool = False,
         with_run: bool = False,
         init_tasks=[],
@@ -357,6 +395,18 @@ class EvaluationsCollection:
             self.per_model[model_id] = results
 
         return results
+
+    def evaluations(self, model_id: str):
+        """Returns a list of dataset to evaluate"""
+        results: list[FutureEvaluationResult] = []
+        for key, evaluations in self.collection.items():
+            result = FutureEvaluationResult(key, evaluations)
+            yield result
+            results.append(result)
+
+        # Adds to per model results
+        if model_id is not None:
+            self.per_model[model_id] = results
 
     def output_results(self, file=sys.stdout):
         """Print all the results"""
