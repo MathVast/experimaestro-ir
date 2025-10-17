@@ -100,10 +100,6 @@ class TokensEncoder(Tokenizer, Encoder):
         """
         return True
 
-    def maxtokens(self) -> Optional[int]:
-        """Maximum number of tokens that can be processed"""
-        return None
-
 
 LegacyEncoderInput = Union[List[str], List[Tuple[str, str]], List[Tuple[str, str, str]]]
 
@@ -126,10 +122,6 @@ class TextEncoderBase(Encoder, Generic[InputType, EncoderOutput]):
     def dimension(self) -> int:
         """Returns the dimension of the output space"""
         raise NotImplementedError()
-
-    def max_tokens(self):
-        """Returns the maximum number of tokens this encoder can process"""
-        return sys.maxsize
 
 
 class TextEncoder(TextEncoderBase[str, torch.Tensor]):
@@ -217,11 +209,6 @@ class TokenizedEncoder(Encoder, Generic[EncoderOutput, TokenizerOutput]):
     def forward(self, inputs: TokenizerOutput) -> EncoderOutput:
         pass
 
-    @property
-    def max_length(self):
-        """Returns the maximum length that the model can process"""
-        return sys.maxsize
-
 
 class TokenizedTextEncoderBase(TextEncoderBase[InputType, EncoderOutput]):
     @abstractmethod
@@ -256,7 +243,7 @@ class TokenizedTextEncoder(
     ) -> EncoderOutput:
         assert len(args) == 0, "Unhandled extra arguments"
         options = options or TokenizerOptions()
-        options.max_length = min(self.encoder.max_length, options.max_length if options.max_length else sys.maxsize)
+        options.max_length = min(self.tokenizer.max_length, options.max_length if options.max_length else sys.maxsize)
         tokenized = self.tokenizer.tokenize(inputs, options)
         return self.forward_tokenized(tokenized, *args)
 
@@ -267,7 +254,7 @@ class TokenizedTextEncoder(
         self, inputs: List[InputType], options: Optional[TokenizerOptions] = None
     ):
         options = options or TokenizerOptions()
-        options.max_length = min(self.encoder.max_length, options.max_length or None)
+        options.max_length = min(self.tokenizer.max_length, options.max_length if options.max_length else sys.maxsize)
         return self.tokenizer.tokenize(inputs, options)
 
     def static(self):

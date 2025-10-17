@@ -17,7 +17,7 @@ from xpmir.text.tokenizers import (
 )
 
 try:
-    from transformers import AutoTokenizer
+    from transformers import AutoTokenizer, AutoConfig
 except Exception:
     logging.error("Install huggingface transformers to use these configurations")
     raise
@@ -33,7 +33,7 @@ class HFTokenizer(Config, Initializable):
     """The tokenizer hugginface ID"""
 
     max_length: Param[int] = 4096
-    """Maximum length for the tokenizer (can be overridden by the model)"""
+    """Maximum length for the tokenizer (can be overridden at inference)"""
 
     DEFAULT_OPTIONS = TokenizerOptions()
 
@@ -53,8 +53,11 @@ class HFTokenizer(Config, Initializable):
                     "Could not find saved tokenizer in %s, using HF loading", path
                 )
 
+        # Load config to read `max_position_embeddings` as proxy for `max_length`
+        self.config = AutoConfig.from_pretrained(model_id_or_path)
+
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_id_or_path, model_max_length=self.max_length
+            model_id_or_path, model_max_length=min(self.max_length, self.config.max_position_embeddings)
         )
 
         self.cls = self.tokenizer.cls_token
@@ -69,7 +72,7 @@ class HFTokenizer(Config, Initializable):
         options = options or HFTokenizer.DEFAULT_OPTIONS
         max_length = options.max_length
         if max_length is None:
-            max_length = self.tokenizer.model_max_length
+            max_length = self.maxtokens()
         else:
             max_length = min(max_length, self.maxtokens())
 

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import sys
 from typing import List, NamedTuple, Optional, TypeVar, Generic
 from attr import define
 import re
@@ -198,3 +199,8 @@ class TokenizerBase(
         Converts an integer id to a token
         """
         ...
+
+    @property
+    def max_length(self) -> int:
+        """Returns the maximum number of tokens this tokenizer can process"""
+        return sys.maxsize
