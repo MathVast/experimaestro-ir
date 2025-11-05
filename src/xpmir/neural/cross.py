@@ -107,3 +107,50 @@ class DuoCrossScorer(DuoLearnableScorer, DistributableModel):
             device=device,
             top_k=top_k,
         )
+
+
+class MiniLMCrossScorer(LearnableScorer, DistributableModel):
+    """Query-Document Representation Classifier
+
+    Based on a query-document representation representation (e.g. BERT [CLS] token).
+    AKA Cross-Encoder
+    """
+
+    encoder: Param[TextEncoderBase[Tuple[str, str], torch.Tensor]]
+    """an encoder for encoding the concatenated query-document tokens which
+    doesn't contains the final linear layer"""
+
+    def __validate__(self):
+        super().__validate__()
+        assert not self.encoder.static(), "The vocabulary should be learnable"
+
+    def __initialize__(self, options):
+        super().__initialize__(options)
+        self.encoder.initialize(options)
+
+        # Equivalent to BertPooler
+        self.dense = torch.nn.Linear(self.encoder.dimension, self.encoder.dimension)
+        self.activation = torch.nn.Tanh()
+
+        # Equivalent to classifier
+        self.dropout = torch.nn.Dropout(0.1, inplace=False)
+        self.classifier = torch.nn.Linear(self.encoder.dimension, 1)
+
+    def forward(self, inputs: BaseRecords, info: TrainerContext = None):
+        # Encode queries and documents
+        pairs = self.encoder(
+            [
+                (tr[TextItem].text, dr[TextItem].text)
+                for tr, dr in zip(inputs.topics, inputs.documents)
+            ],
+            # options=self.tokenizer_options,
+        )  # shape (batch_size * dimension)
+
+        # Pooler + Classifier
+        output = self.dense(pairs.value)
+        output = self.activation(output)
+        output = self.dropout(output)
+        return self.classifier(output).squeeze(1)
+
+    def distribute_models(self, update):
+        self.encoder = update(self.encoder)
