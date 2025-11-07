@@ -59,7 +59,7 @@ def msmarco_v1_docpairs_sampler(
     :param sample_rate: Sample rate for the triplets (default 1)
     """
     topics = prepare_dataset("irds.msmarco-passage.train.queries")
-    train_triples = prepare_dataset("irds.msmarco-passage.train.docpairs")
+    train_triples = prepare_dataset("irds.msmarco-passage.train.triples-v2.docpairs")
     triplets = ShuffledTrainingTripletsLines(
         seed=123,
         data=StoreTrainingTripletTopicAdapter(data=train_triples, store=topics),
@@ -91,7 +91,7 @@ def msmarco_v1_docpairs_efficient_sampler(
     :param sample_rate: Sample rate for the triplets (default 1)
     """
     topics = prepare_dataset("irds.msmarco-passage.train.queries")
-    train_triples = prepare_dataset("irds.msmarco-passage.train.docpairs")
+    train_triples = prepare_dataset("irds.msmarco-passage.train.triples-v2.docpairs")
     triplets = ShuffledTrainingTripletsLines.C(
         seed=seed,
         data=StoreTrainingTripletTopicAdapter.C(data=train_triples, store=topics),
