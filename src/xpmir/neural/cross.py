@@ -128,10 +128,6 @@ class MiniLMCrossScorer(LearnableScorer, DistributableModel):
         super().__initialize__(options)
         self.encoder.initialize(options)
 
-        # Equivalent to BertPooler
-        self.dense = torch.nn.Linear(self.encoder.dimension, self.encoder.dimension)
-        self.activation = torch.nn.Tanh()
-
         # Equivalent to classifier
         self.dropout = torch.nn.Dropout(0.1, inplace=False)
         self.classifier = torch.nn.Linear(self.encoder.dimension, 1)
@@ -146,10 +142,8 @@ class MiniLMCrossScorer(LearnableScorer, DistributableModel):
             # options=self.tokenizer_options,
         )  # shape (batch_size * dimension)
 
-        # Pooler + Classifier
-        output = self.dense(pairs.value)
-        output = self.activation(output)
-        output = self.dropout(output)
+        # Classifier
+        output = self.dropout(pairs.value)
         return self.classifier(output).squeeze(1)
 
     def distribute_models(self, update):
