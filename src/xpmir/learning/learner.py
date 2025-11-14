@@ -78,11 +78,14 @@ class LearnerListener(Config):
 class LearnerOutput(NamedTuple):
     """The data structure for the output of a learner. It contains a dictionary
     where the key is the name of the listener and the value is the output of
-    that listener"""
+    that listener. It also allows to access the checkpoints saved during 
+    the training"""
 
     listeners: Dict[str, Any]
 
     learned_model: ModuleLoader
+
+    checkpoints: Dict[str, Any]
 
 
 class Learner(Task, EasyLogger):
@@ -162,6 +165,10 @@ class Learner(Task, EasyLogger):
                     path=self.last_checkpoint_path / TrainState.MODEL_PATH,
                 )
             ),
+            checkpoints={
+                interval: ModuleLoader.C(value=self.model, path=TrainerContext.get_checkpoint_path(self.checkpointspath, interval) / TrainState.MODEL_PATH) 
+                for interval in range(0, self.max_epochs, self.checkpoint_interval)
+            },
         )
 
     @property

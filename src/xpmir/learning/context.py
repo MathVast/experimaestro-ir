@@ -247,9 +247,13 @@ class TrainerContext(ComputationContext):
 
         return False
 
+    @staticmethod
+    def get_checkpoint_path(checkpointspath: Path, epoch: int) -> Path:
+        return checkpointspath / f"{TrainerContext.PREFIX}{epoch:08d}"
+
     def save_checkpoint(self):
         # Serialize
-        path = self.path / f"{TrainerContext.PREFIX}{self.epoch:08d}"
+        path = TrainerContext.get_checkpoint_path(self.path, self.epoch)
         if self.state.path is not None:
             # No need to save twice
             return
