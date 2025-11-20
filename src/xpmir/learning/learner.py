@@ -2,7 +2,7 @@ from enum import Enum
 import logging
 import torch
 from pathlib import Path
-from typing import Dict, Iterator, List, NamedTuple, Any
+from typing import Dict, Iterator, List, NamedTuple, Any, Optional
 from experimaestro import (
     Task,
     Config,
@@ -171,12 +171,7 @@ class Learner(Task, EasyLogger):
                 )
             ),
             checkpoints={
-                interval: CheckpointModuleLoader.C(
-                    value=self.model, 
-                    path=TrainerContext.get_checkpoint_path(self.checkpointspath, interval) / TrainState.MODEL_PATH,
-                    epoch=interval 
-                ),
-                for interval in range(0, self.max_epochs, self.checkpoint_interval)
+                interval: CheckpointModuleLoader.C(value=self.model, path=TrainerContext.get_checkpoint_path(self.checkpointspath, interval) / TrainState.MODEL_PATH, epoch=interval) for interval in range(0, self.max_epochs, self.checkpoint_interval)
             },
         )
 
