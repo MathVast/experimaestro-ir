@@ -36,6 +36,11 @@ from .batchers import RecoverableOOMError
 
 logger = easylog()
 
+class CheckpointModuleLoader(ModuleLoader):
+    """Useful to load a specific checkpoint"""
+
+    epoch: Param[Optional[int]] = None
+    """The epoch of the checkpoint"""
 
 class LearnerListenerStatus(Enum):
     NO_DECISION = 0
@@ -160,13 +165,17 @@ class Learner(Task, EasyLogger):
                 for listener in self.listeners
             },
             learned_model=dep(
-                ModuleLoader.C(
+                CheckpointModuleLoader.C(
                     value=self.model,
                     path=self.last_checkpoint_path / TrainState.MODEL_PATH,
                 )
             ),
             checkpoints={
-                interval: ModuleLoader.C(value=self.model, path=TrainerContext.get_checkpoint_path(self.checkpointspath, interval) / TrainState.MODEL_PATH) 
+                interval: CheckpointModuleLoader.C(
+                    value=self.model, 
+                    path=TrainerContext.get_checkpoint_path(self.checkpointspath, interval) / TrainState.MODEL_PATH,
+                    epoch=interval 
+                ),
                 for interval in range(0, self.max_epochs, self.checkpoint_interval)
             },
         )
