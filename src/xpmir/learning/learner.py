@@ -171,7 +171,7 @@ class Learner(Task, EasyLogger):
                 )
             ),
             checkpoints={
-                interval: CheckpointModuleLoader.C(value=self.model, path=TrainerContext.get_checkpoint_path(self.checkpointspath, interval) / TrainState.MODEL_PATH, epoch=interval) for interval in range(0, self.max_epochs, self.checkpoint_interval)
+                interval: dep(CheckpointModuleLoader.C(value=self.model, path=TrainerContext.get_checkpoint_path(self.checkpointspath, interval) / TrainState.MODEL_PATH, epoch=interval)) for interval in range(0, self.max_epochs, self.checkpoint_interval)
             },
         )
 
